@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: alerter
+    labels:
+        app: alerter
+    name: alerter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alerter
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: alerter
+    spec:
+      containers:
+      - image: ghcr.io/bruli/alerter:0.1.0
+        name: alerter
+        imagePullPolicy: IfNotPresent
+        ports:
+            - name: http
+              containerPort: 8080
+        env:
+            - { name: TZ, value: Europe/Madrid }
+            - name: NATS_SERVER_URL
+              value: nats://nats.nats.svc.cluster.local:4222
+            - name: TELEGRAM_TOKEN
+              valueFrom:
+                  secretKeyRef:
+                      name: alerter-secret
+                      key: TELEGRAM_TOKEN
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                  secretKeyRef:
+                      name: alerter-secret
+                      key: TELEGRAM_CHAT_ID
+        readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+        livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 20
+        resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits:   { cpu: 200m, memory: 128Mi }

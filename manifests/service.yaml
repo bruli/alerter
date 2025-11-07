@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+    namespace: alerter
+    labels:
+        app: alerter
+    name: alerter
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: alerter
+  type: ClusterIP
+
