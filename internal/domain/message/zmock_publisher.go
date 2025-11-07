@@ -18,7 +18,7 @@ var _ Publisher = &PublisherMock{}
 //
 //		// make and configure a mocked Publisher
 //		mockedPublisher := &PublisherMock{
-//			PublishFunc: func(ctx context.Context, m *Message) error {
+//			PublishFunc: func(ctx context.Context, msg string) error {
 //				panic("mock out the Publish method")
 //			},
 //		}
@@ -29,7 +29,7 @@ var _ Publisher = &PublisherMock{}
 //	}
 type PublisherMock struct {
 	// PublishFunc mocks the Publish method.
-	PublishFunc func(ctx context.Context, m *Message) error
+	PublishFunc func(ctx context.Context, msg string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -37,29 +37,29 @@ type PublisherMock struct {
 		Publish []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// M is the m argument value.
-			M *Message
+			// Msg is the msg argument value.
+			Msg string
 		}
 	}
 	lockPublish sync.RWMutex
 }
 
 // Publish calls PublishFunc.
-func (mock *PublisherMock) Publish(ctx context.Context, m *Message) error {
+func (mock *PublisherMock) Publish(ctx context.Context, msg string) error {
 	if mock.PublishFunc == nil {
 		panic("PublisherMock.PublishFunc: method is nil but Publisher.Publish was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
-		M   *Message
+		Msg string
 	}{
 		Ctx: ctx,
-		M:   m,
+		Msg: msg,
 	}
 	mock.lockPublish.Lock()
 	mock.calls.Publish = append(mock.calls.Publish, callInfo)
 	mock.lockPublish.Unlock()
-	return mock.PublishFunc(ctx, m)
+	return mock.PublishFunc(ctx, msg)
 }
 
 // PublishCalls gets all the calls that were made to Publish.
@@ -68,11 +68,11 @@ func (mock *PublisherMock) Publish(ctx context.Context, m *Message) error {
 //	len(mockedPublisher.PublishCalls())
 func (mock *PublisherMock) PublishCalls() []struct {
 	Ctx context.Context
-	M   *Message
+	Msg string
 } {
 	var calls []struct {
 		Ctx context.Context
-		M   *Message
+		Msg string
 	}
 	mock.lockPublish.RLock()
 	calls = mock.calls.Publish

@@ -1,8 +1,16 @@
 package message
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-const FailedStatus = "Failed"
+const (
+	FailedStatus = "Failed"
+
+	FailedMessage     = "⚠️ failed ping. Resource: %q"
+	ReadyAgainMessage = "✅ ping ready again from resource %q"
+)
 
 var (
 	ErrInvalidResource = errors.New("message resource is required")
@@ -23,6 +31,15 @@ func (m Message) Status() string {
 
 func (m Message) IsFailed() bool {
 	return m.status == FailedStatus
+}
+
+func (m Message) Message() string {
+	msg := ReadyAgainMessage
+	if m.IsFailed() {
+		msg = FailedMessage
+	}
+
+	return fmt.Sprintf(msg, m.resource)
 }
 
 func (m Message) validate() error {

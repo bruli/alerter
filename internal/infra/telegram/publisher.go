@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bruli/alerter/internal/domain/message"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -13,12 +12,12 @@ type Publisher struct {
 	chatID int64
 }
 
-func (p Publisher) Publish(ctx context.Context, m *message.Message) error {
+func (p Publisher) Publish(ctx context.Context, msg string) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		_, err := p.bot.Send(tgbotapi.NewMessage(p.chatID, fmt.Sprintf("⚠️ failed ping. Resource: %q", m.Resource())))
+		_, err := p.bot.Send(tgbotapi.NewMessage(p.chatID, msg))
 		if err != nil {
 			return fmt.Errorf("send message: %w", err)
 		}

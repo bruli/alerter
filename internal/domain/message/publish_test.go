@@ -68,7 +68,7 @@ func TestPublish_Handle(t *testing.T) {
 		t.Run(`Given a Publish service,
 		when Handle method is called `+tt.name, func(t *testing.T) {
 			pub := &message.PublisherMock{}
-			pub.PublishFunc = func(_ context.Context, m *message.Message) error {
+			pub.PublishFunc = func(_ context.Context, msg string) error {
 				return tt.expectedErr
 			}
 			cache := &message.CacheMock{}

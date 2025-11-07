@@ -9,7 +9,7 @@ type Publish struct {
 
 func (p Publish) Handle(ctx context.Context, m *Message) error {
 	if !p.cache.Exists(m.resource) && m.IsFailed() {
-		if err := p.publisher.Publish(ctx, m); err != nil {
+		if err := p.publisher.Publish(ctx, m.Message()); err != nil {
 			return err
 		}
 		p.cache.Set(m.resource)
