@@ -12,8 +12,8 @@ import (
 const PingSubject = "ping.created"
 
 type Message struct {
-	Resource string
-	Status   string
+	Resource string `json:"resourceName"`
+	Status   string `json:"status"`
 }
 
 type MessageConsumer struct {
