@@ -43,7 +43,7 @@ func main() {
 
 	publisSvc := message.NewPublish(publisher, cache)
 
-	consumer := infranats.NewMessageConsumer(publisSvc)
+	consumer := infranats.NewMessageConsumer(publisSvc, log)
 
 	natsUrl := conf.NatsServerURL
 	nc, err := nats.Connect(natsUrl)

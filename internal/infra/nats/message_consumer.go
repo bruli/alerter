@@ -37,6 +37,6 @@ func (c MessageConsumer) Consume(msg *nats.Msg) {
 	}
 }
 
-func NewMessageConsumer(svc *message.Publish) *MessageConsumer {
-	return &MessageConsumer{svc: svc}
+func NewMessageConsumer(svc *message.Publish, log *zerolog.Logger) *MessageConsumer {
+	return &MessageConsumer{svc: svc, log: log}
 }
