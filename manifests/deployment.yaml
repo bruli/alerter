@@ -17,7 +17,7 @@ spec:
         app: alerter
     spec:
       containers:
-      - image: ghcr.io/bruli/alerter:0.1.2
+      - image: ghcr.io/bruli/alerter:0.2.0
         name: alerter
         imagePullPolicy: IfNotPresent
         ports:
