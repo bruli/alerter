@@ -15,6 +15,7 @@ import (
 	"github.com/bruli/alerter/internal/infra/memory"
 	infranats "github.com/bruli/alerter/internal/infra/nats"
 	"github.com/bruli/alerter/internal/infra/telegram"
+	"github.com/bruli/pinger/pkg/events"
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog"
 )
@@ -57,7 +58,7 @@ func main() {
 		nc.Close()
 	}()
 
-	subject := infranats.PingSubject
+	subject := events.PingSubjet
 
 	sub, err := nc.Subscribe(subject, consumer.Consume)
 	if err != nil {

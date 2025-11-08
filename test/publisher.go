@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bruli/alerter/internal/domain/message"
-	infranats "github.com/bruli/alerter/internal/infra/nats"
 	"github.com/bruli/pinger/pkg/events"
 	"github.com/nats-io/nats.go"
 	"google.golang.org/protobuf/proto"
@@ -36,7 +35,7 @@ func main() {
 	var n int
 	i := 5
 	for range i {
-		err = nc.Publish(infranats.PingSubject, data)
+		err = nc.Publish(events.PingSubjet, data)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -56,7 +55,7 @@ func main() {
 
 	no := 10
 	for range no {
-		if err = nc.Publish(infranats.PingSubject, data); err != nil {
+		if err = nc.Publish(events.PingSubjet, data); err != nil {
 			log.Fatal(err)
 		}
 		time.Sleep(time.Second)

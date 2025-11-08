@@ -10,8 +10,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const PingSubject = "ping.created"
-
 type PingResultConsumer struct {
 	svc *message.Publish
 	log *zerolog.Logger
