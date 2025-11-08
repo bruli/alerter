@@ -2,28 +2,24 @@ package nats
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/bruli/alerter/internal/domain/message"
+	"github.com/bruli/pinger/pkg/events"
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/proto"
 )
 
 const PingSubject = "ping.created"
 
-type Message struct {
-	Resource string `json:"resourceName"`
-	Status   string `json:"status"`
-}
-
-type MessageConsumer struct {
+type PingResultConsumer struct {
 	svc *message.Publish
 	log *zerolog.Logger
 }
 
-func (c MessageConsumer) Consume(msg *nats.Msg) {
-	var m Message
-	if err := json.Unmarshal(msg.Data, &m); err != nil {
+func (c PingResultConsumer) Consume(msg *nats.Msg) {
+	var m events.PingResult
+	if err := proto.Unmarshal(msg.Data, &m); err != nil {
 		c.log.Error().Err(err).Msg("error while unmarshalling message")
 		return
 	}
@@ -37,6 +33,6 @@ func (c MessageConsumer) Consume(msg *nats.Msg) {
 	}
 }
 
-func NewMessageConsumer(svc *message.Publish, log *zerolog.Logger) *MessageConsumer {
-	return &MessageConsumer{svc: svc, log: log}
+func NewPingResultConsumer(svc *message.Publish, log *zerolog.Logger) *PingResultConsumer {
+	return &PingResultConsumer{svc: svc, log: log}
 }

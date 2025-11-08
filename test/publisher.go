@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/bruli/alerter/internal/domain/message"
 	infranats "github.com/bruli/alerter/internal/infra/nats"
+	"github.com/bruli/pinger/pkg/events"
 	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 )
 
 func main() {
@@ -22,12 +23,12 @@ func main() {
 
 	resource := "testing"
 
-	msg := infranats.Message{
+	msg := events.PingResult{
 		Resource: resource,
 		Status:   message.FailedStatus,
 	}
 
-	data, err := json.Marshal(msg)
+	data, err := proto.Marshal(&msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,12 +44,12 @@ func main() {
 		time.Sleep(time.Second)
 	}
 
-	readyMsg := infranats.Message{
+	readyMsg := events.PingResult{
 		Resource: resource,
 		Status:   "ok",
 	}
 
-	data, err = json.Marshal(readyMsg)
+	data, err = proto.Marshal(&readyMsg)
 	if err != nil {
 		log.Fatal(err)
 	}
