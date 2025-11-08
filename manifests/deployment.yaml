@@ -37,6 +37,10 @@ spec:
                   secretKeyRef:
                       name: alerter-secret
                       key: TELEGRAM_CHAT_ID
+            - name: CACHE_TTL
+              value: 10m
+            - name: CACHE_TTL_REFRESH
+              value: 60s
         readinessProbe:
             httpGet: { path: /healthz, port: http }
             initialDelaySeconds: 3

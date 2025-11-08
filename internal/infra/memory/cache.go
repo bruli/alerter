@@ -37,7 +37,7 @@ func (c *Cache) RunTTL(ctx context.Context, refresh time.Duration) {
 func (c *Cache) Set(v string) {
 	c.Lock()
 	defer c.Unlock()
-	c.m[v] = time.Now().UTC()
+	c.m[v] = time.Now().UTC().Add(c.ttl)
 }
 
 func (c *Cache) Exists(v string) bool {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -21,7 +20,7 @@ func main() {
 		nc.Close()
 	}()
 
-	resource := fmt.Sprintf("testing at %s", time.Now().String())
+	resource := "testing"
 
 	msg := infranats.Message{
 		Resource: resource,
@@ -41,6 +40,26 @@ func main() {
 			log.Fatal(err)
 		}
 		n++
+		time.Sleep(time.Second)
 	}
+
+	readyMsg := infranats.Message{
+		Resource: resource,
+		Status:   "ok",
+	}
+
+	data, err = json.Marshal(readyMsg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	no := 10
+	for range no {
+		if err = nc.Publish(infranats.PingSubject, data); err != nil {
+			log.Fatal(err)
+		}
+		time.Sleep(time.Second)
+	}
+
 	nc.Close()
 }

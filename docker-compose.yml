@@ -10,6 +10,8 @@ services:
             - NATS_SERVER_URL=nats://nats:4222
             - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
             - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+            - CACHE_TTL=5m
+            - CACHE_TTL_REFRESH=20s
         ports:
           - "8085:8080"
     nats:

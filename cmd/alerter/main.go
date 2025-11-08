@@ -38,8 +38,8 @@ func main() {
 	}
 	log.Info().Msgf("telegram publisher created")
 
-	cache := memory.NewCache(time.Minute)
-	go cache.RunTTL(ctx, 20*time.Second)
+	cache := memory.NewCache(conf.CacheTTL)
+	go cache.RunTTL(ctx, conf.CacheTTLRefresh)
 
 	publisSvc := message.NewPublish(publisher, cache)
 
