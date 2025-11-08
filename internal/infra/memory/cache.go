@@ -12,6 +12,10 @@ type Cache struct {
 	ttl time.Duration
 }
 
+func (c *Cache) Remove(v string) {
+	delete(c.m, v)
+}
+
 func (c *Cache) RunTTL(ctx context.Context, refresh time.Duration) {
 	tc := time.NewTicker(refresh)
 	for {
@@ -22,7 +26,7 @@ func (c *Cache) RunTTL(ctx context.Context, refresh time.Duration) {
 			c.Lock()
 			for k, v := range c.m {
 				if time.Now().After(v) {
-					delete(c.m, k)
+					c.Remove(k)
 				}
 			}
 			c.Unlock()

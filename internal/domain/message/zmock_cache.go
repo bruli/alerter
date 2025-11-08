@@ -20,6 +20,9 @@ var _ Cache = &CacheMock{}
 //			ExistsFunc: func(v string) bool {
 //				panic("mock out the Exists method")
 //			},
+//			RemoveFunc: func(v string)  {
+//				panic("mock out the Remove method")
+//			},
 //			SetFunc: func(v string)  {
 //				panic("mock out the Set method")
 //			},
@@ -33,6 +36,9 @@ type CacheMock struct {
 	// ExistsFunc mocks the Exists method.
 	ExistsFunc func(v string) bool
 
+	// RemoveFunc mocks the Remove method.
+	RemoveFunc func(v string)
+
 	// SetFunc mocks the Set method.
 	SetFunc func(v string)
 
@@ -43,6 +49,11 @@ type CacheMock struct {
 			// V is the v argument value.
 			V string
 		}
+		// Remove holds details about calls to the Remove method.
+		Remove []struct {
+			// V is the v argument value.
+			V string
+		}
 		// Set holds details about calls to the Set method.
 		Set []struct {
 			// V is the v argument value.
@@ -50,6 +61,7 @@ type CacheMock struct {
 		}
 	}
 	lockExists sync.RWMutex
+	lockRemove sync.RWMutex
 	lockSet    sync.RWMutex
 }
 
@@ -82,6 +94,38 @@ func (mock *CacheMock) ExistsCalls() []struct {
 	mock.lockExists.RLock()
 	calls = mock.calls.Exists
 	mock.lockExists.RUnlock()
+	return calls
+}
+
+// Remove calls RemoveFunc.
+func (mock *CacheMock) Remove(v string) {
+	if mock.RemoveFunc == nil {
+		panic("CacheMock.RemoveFunc: method is nil but Cache.Remove was just called")
+	}
+	callInfo := struct {
+		V string
+	}{
+		V: v,
+	}
+	mock.lockRemove.Lock()
+	mock.calls.Remove = append(mock.calls.Remove, callInfo)
+	mock.lockRemove.Unlock()
+	mock.RemoveFunc(v)
+}
+
+// RemoveCalls gets all the calls that were made to Remove.
+// Check the length with:
+//
+//	len(mockedCache.RemoveCalls())
+func (mock *CacheMock) RemoveCalls() []struct {
+	V string
+} {
+	var calls []struct {
+		V string
+	}
+	mock.lockRemove.RLock()
+	calls = mock.calls.Remove
+	mock.lockRemove.RUnlock()
 	return calls
 }
 

@@ -4,4 +4,5 @@ package message
 type Cache interface {
 	Set(v string)
 	Exists(v string) bool
+	Remove(v string)
 }

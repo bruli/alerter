@@ -10,7 +10,7 @@ import (
 )
 
 func TestPublish_Handle(t *testing.T) {
-	notFailedMessage, err := message.NewMessage("test", "ok")
+	readyMessage, err := message.NewMessage("test", "ok")
 	require.NoError(t, err)
 	failedMessage, err := message.NewMessage("test", message.FailedStatus)
 	require.NoError(t, err)
@@ -20,23 +20,15 @@ func TestPublish_Handle(t *testing.T) {
 		m   *message.Message
 	}
 	tests := []struct {
-		name             string
-		args             args
-		expectedErr      error
-		exits            bool
-		expectedSetCalls int
+		name        string
+		args        args
+		expectedErr error
+		exits       bool
+		expectedSetCalls,
+		expectedRemoveCalls int
 	}{
 		{
-			name: "with a not failed message, then it returns nil and no set the value",
-			args: args{
-				ctx: ctx,
-				m:   notFailedMessage,
-			},
-			exits:            true,
-			expectedSetCalls: 0,
-		},
-		{
-			name: "with a failed message and resource already exist in cache, then it returns nil and no set the value",
+			name: "with a failed message and resource already exist in cache, then it no set the value in cache and not send message",
 			args: args{
 				ctx: ctx,
 				m:   failedMessage,
@@ -55,13 +47,31 @@ func TestPublish_Handle(t *testing.T) {
 			expectedSetCalls: 0,
 		},
 		{
-			name: "with a failed message and resource not exist in cache, then it set in cache and returns nil",
+			name: "with a failed message and resource not exist in cache, then it set in cache and returns send message",
 			args: args{
 				ctx: ctx,
 				m:   failedMessage,
 			},
 			exits:            false,
 			expectedSetCalls: 1,
+		},
+		{
+			name: "with a ready message and resource exit exist in cache, then it remove cache and publish message",
+			args: args{
+				ctx: ctx,
+				m:   readyMessage,
+			},
+			exits:               true,
+			expectedRemoveCalls: 1,
+		},
+		{
+			name: "with a ready message and resource exit exist in cache but publish returns an error, then it returns same error",
+			args: args{
+				ctx: ctx,
+				m:   readyMessage,
+			},
+			exits:       true,
+			expectedErr: errors.New("test"),
 		},
 	}
 	for _, tt := range tests {
@@ -75,8 +85,8 @@ func TestPublish_Handle(t *testing.T) {
 			cache.ExistsFunc = func(a string) bool {
 				return tt.exits
 			}
-			cache.SetFunc = func(v string) {
-			}
+			cache.SetFunc = func(v string) {}
+			cache.RemoveFunc = func(v string) {}
 
 			p := message.NewPublish(pub, cache)
 			err = p.Handle(tt.args.ctx, tt.args.m)
