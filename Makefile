@@ -69,7 +69,7 @@ lint:
 test:
 	@set -euo pipefail; \
 	echo "🧪 Running unit tests (race, JSON → tparse)..."; \
-	go test -race ./... -json -cover | go tool tparse -all
+	go test -race ./... -json -cover -coverprofile=coverage.out| go tool tparse -all
 
 clean:
 	@set -euo pipefail; \
