@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,27 +18,28 @@ import (
 	"github.com/bruli/alerter/internal/infra/telegram"
 	"github.com/bruli/pinger/pkg/events"
 	"github.com/nats-io/nats.go"
-	"github.com/rs/zerolog"
 )
+
+const serviceName = "alerter"
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	log := buildLogger()
+	log := buildLog()
 
 	conf, err := config.New()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to load configuration")
+		log.ErrorContext(ctx, "failed to load configuration", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
 	publisher, err := telegram.NewPublisher(conf.TelegramToken, conf.TelegramChatID)
 	if err != nil {
-		log.Err(err).Msg("failed to create telegram publisher")
+		log.ErrorContext(ctx, "failed to create telegram publisher", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	log.Info().Msgf("telegram publisher created")
+	log.InfoContext(ctx, "telegram publisher created")
 
 	cache := memory.NewCache(conf.CacheTTL)
 	go cache.RunTTL(ctx, conf.CacheTTLRefresh)
@@ -49,10 +51,10 @@ func main() {
 	natsUrl := conf.NatsServerURL
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
-		log.Err(err).Msg("failed to connect to nats")
+		log.ErrorContext(ctx, "failed to connect to nats", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	log.Info().Msgf("connected to NATS server %s", natsUrl)
+	log.InfoContext(ctx, "nats connected", slog.String("url", natsUrl))
 	defer func() {
 		_ = nc.Drain()
 		nc.Close()
@@ -62,34 +64,40 @@ func main() {
 
 	sub, err := nc.Subscribe(subject, consumer.Consume)
 	if err != nil {
-		log.Err(err).Msg("failed to subscribe to subject")
+		log.ErrorContext(ctx, "failed to subscribe to subject",
+			slog.String("subject", subject),
+			slog.String("error", err.Error()))
 	}
 	defer func() {
 		_ = sub.Unsubscribe()
 	}()
-
-	log.Info().Msgf("subscribed to subject %s", subject)
+	log.InfoContext(ctx, "nats subscription created", slog.String("subject", subject))
 
 	srv := infrahttp.NewServer(log)
 
 	go shutDown(ctx, log, srv)
 	if err = srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal().Err(err).Msg("error while starting server")
+		log.ErrorContext(ctx, "failed to start server", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
 
-func buildLogger() *zerolog.Logger {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log := zerolog.New(os.Stdout).With().Timestamp().Logger()
-	return &log
+func buildLog() *slog.Logger {
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+
+	log := slog.New(handler)
+	log.With("service", serviceName)
+	return log
 }
 
-func shutDown(ctx context.Context, log *zerolog.Logger, srv *http.Server) {
+func shutDown(ctx context.Context, log *slog.Logger, srv *http.Server) {
 	<-ctx.Done()
-	log.Info().Msg("shutdown signal received, stopping server...")
+	log.InfoContext(ctx, "shutdown signal received, stopping server...")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error().Err(err).Msg("error shutting down HTTP server")
+		log.ErrorContext(ctx, "error shutting down HTTP server", slog.String("error", err.Error()))
 	}
 }

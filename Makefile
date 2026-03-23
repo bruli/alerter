@@ -16,9 +16,11 @@ CURRENT_IMAGE := $(IMAGE_NAME):$(VERSION)
 
 # 📚 Declare all phony targets
 .PHONY: docker-logs docker-down docker-exec docker-ps docker-up \
-        test test-functional lint clean fmt help \
+        test test-functional clean fmt help \
         encryptVault decryptVault build deploy security docker-login docker-push-image
 
+
+GOLANGCI_LINT_VERSION ?= v2.11.4
 # ────────────────────────────────────────────────────────────────
 # 🐳 Docker
 # ────────────────────────────────────────────────────────────────
@@ -61,10 +63,17 @@ security:
 	echo "👉 Check security"; \
 	go tool govulncheck ./...
 
-lint:
+.PHONY: install-lint
+install-lint:
 	@set -euo pipefail; \
-	echo "🔍 Running golangci-lint..."; \
-	go tool golangci-lint run ./...
+    echo "🔧 Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."; \
+    	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
+.PHONY: lint
+lint: install-lint
+	@set -euo pipefail; \
+	echo "🚀 Executing golangci-lint..."; \
+    golangci-lint run ./...
 
 test:
 	@set -euo pipefail; \
