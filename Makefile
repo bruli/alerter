@@ -8,7 +8,7 @@ DOCKERFILE ?= Dockerfile
 
 IMAGE_REG  ?= ghcr.io/bruli
 IMAGE_NAME := $(IMAGE_REG)/$(APP)
-VERSION    ?= 0.5.0
+VERSION    ?= 0.5.1
 CURRENT_IMAGE := $(IMAGE_NAME):$(VERSION)
 
 # Default goal
@@ -97,6 +97,7 @@ docker-login:
 docker-push-image: docker-login
 	echo "🐳 Building and pushing Docker image $(CURRENT_IMAGE) for (prod)...";
 	docker buildx build \
+		--platform linux/arm64 \
 		-t $(CURRENT_IMAGE) \
 		-f $(DOCKERFILE) \
 		--push \

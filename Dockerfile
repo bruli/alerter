@@ -3,23 +3,30 @@
 ############################
 # Etapa de build ARM64
 ############################
-FROM golang:1.26.1 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.1 AS builder
 WORKDIR /src
 
 ENV GOPROXY=https://proxy.golang.org,direct
 
 # 1) Deps (capa estable + cache)
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 # 2) Codi
 COPY . .
 
+
+ARG TARGETOS
+ARG TARGETARCH
+
 # 3) Build (cache de compilació)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /out/alerter ./cmd/alerter
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o  /out/alerter ./cmd/alerter
 
 # --- runtime ---
 FROM alpine:3.22
+RUN apk add --no-cache tzdata
 # copia el teu binari
 COPY --from=builder /out/alerter /usr/local/bin/alerter
 
