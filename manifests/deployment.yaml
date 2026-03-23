@@ -16,6 +16,9 @@ spec:
       labels:
         app: alerter
     spec:
+      serviceAccountName: default
+      imagePullSecrets:
+        - name: ghcr-login
       containers:
       - image: ghcr.io/bruli/alerter:0.5.0
         name: alerter
